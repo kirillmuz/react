@@ -29,3 +29,9 @@ export interface Department {
     description?: string;
     employees: Array<Employee>;
 }
+
+export interface UserFile {
+    id: number;
+    systemName: string;
+    displayName: string;
+}

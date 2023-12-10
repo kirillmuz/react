@@ -1,10 +1,11 @@
 import { FC, useEffect, useState } from 'react';
 import { Layout } from '../../components/layouts';
-import { Button, Dialog, DropDown, EmployeesList, TextField } from '../../components';
+import { Button, Dialog, DropDown, EducationList, EmployeesList, FilesList, TextField, WorkExperienceList } from '../../components';
 import { Department, Employee } from '../../types/models';
 import { DropDownItem } from '../../components/dropDown/DropDownProps';
-import { UploadIcon } from '../../assets/icons';
+import { PlusIcon, UploadIcon } from '../../assets/icons';
 import './departmentsPageStyles.scss';
+import { format } from 'date-fns';
 
 const fakeEmployeesData = [
     { id: 1, lastName: 'Иванов', firstName: 'Иван', midleName: 'Иванович', birthDate: new Date().toISOString(), email: 'ivanov@mail.ru', phoneNumber: '8-800-535-35-35' },
@@ -153,6 +154,12 @@ export const DepartmentsPage: FC = () => {
     const uploadFileHandler = () => {
     }
 
+    const downloadFileHandler = (id: number) => {
+    }
+
+    const deleteFileHandler = (id: number) => {
+    }
+
     return (
         <Layout>
             <Dialog title={userActionMode !== 'edit' ? 'Добавить сотрудника' : 'Изменить  сотрудника'}
@@ -164,15 +171,20 @@ export const DepartmentsPage: FC = () => {
             </Dialog>
             <div className="dep-page">
                 <div className="dep-page__users-list-container">
-                    <DropDown items={departmentsData.map(dd => {
-                        return {
-                            text: dd.name,
-                            value: dd.id.toString()
-                        } as DropDownItem;
-                    })} 
-                        label="Отделы:" 
-                        selectedChanged={(val) => depatmentChangedHandler(val)}
-                    />
+                    <div className="dep-page__departments-list">
+                        <DropDown className="dep-page__departments-drop-down"
+                            items={departmentsData.map(dd => {
+                                    return {
+                                        text: dd.name,
+                                        value: dd.id.toString()
+                                    } as DropDownItem;
+                                })
+                            } 
+                            label="Отделы:" 
+                            selectedChanged={(val) => depatmentChangedHandler(val)}
+                        />
+                        <PlusIcon width={16} height={16} className="dep-page__add-btn" />
+                    </div>
                     <EmployeesList employeesList={employeesData}
                         onItemClick={(id) => onEmployeeSelectedHandler(id)}
                         onItemDelete={(id) => console.log('delete ', id)}
@@ -189,7 +201,12 @@ export const DepartmentsPage: FC = () => {
                             <div className="dep-page__user-info-pers-data">
                                 <div>
                                     <strong>Дата рождения: </strong>
-                                    <span>{selectedEmployee?.birthDate ?? '-'}</span>
+                                    <span>{
+                                        selectedEmployee?.birthDate 
+                                            ? format(new Date(selectedEmployee.birthDate), 'dd.MM.yyyy')
+                                            : '-'
+                                        }
+                                    </span>
                                 </div>
                                 <div>
                                     <strong>Email: </strong>
@@ -201,17 +218,64 @@ export const DepartmentsPage: FC = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="dep-page__use-info-actions">
-                            <UploadIcon onClick={uploadFileHandler} />
+                        <div className="dep-page__user-info-actions">
+                            <UploadIcon onClick={uploadFileHandler} color="#7a7a7a" />
                         </div>
                     </div>
-                    <div>
-                        <div>
-                            Files list
+                    <div className="dep-page__user-add-info">
+                        <div className="dep-page__user-add-info-files">
+                            <span className="dep-page__label">
+                                Прикрепленные файлы:
+                            </span>
+                            <FilesList 
+                                onFileDownload={downloadFileHandler}
+                                onFileDelete={deleteFileHandler}
+                                filesList={[{
+                                    id: 1,
+                                    displayName: 'my file.txt',
+                                    systemName: 'asadasd'
+                                }, {
+                                    id: 2,
+                                    displayName: 'my file 2.txt',
+                                    systemName: 'asadasd'
+                                }]} 
+                            />
                         </div>
-                        <div>
-                            <div>Education list</div>
-                            <div>Данные о работе</div>
+                        <div className="dep-page__user-add-info-data">
+                            <div className="dep-page__user-add-info-data__cell">
+                                <div className="dep-page__list-title">
+                                    <span className="dep-page__label">
+                                        Данные об образовании:
+                                    </span>
+                                    <PlusIcon width={16} height={16} className="dep-page__add-btn" />
+                                </div>
+                                <EducationList educationList={[{
+                                    id: 1,
+                                    description: 'Инженер-программист',
+                                    title: 'Высшее образование'
+                                },{
+                                    id: 2,
+                                    description: 'Системный администратор',
+                                    title: 'Высшее образование'
+                                }]} />
+                            </div>
+                            <div className="dep-page__user-add-info-data__cell">
+                                <div className="dep-page__list-title">
+                                    <span className="dep-page__label">
+                                        Данные о работе:
+                                    </span>
+                                    <PlusIcon width={16} height={16} className="dep-page__add-btn" />
+                                </div>
+                                <WorkExperienceList workExperienceList={[{
+                                    id: 1,
+                                    workedYears: 3,
+                                    description: 'ООО "Рога и копыта"'
+                                },{
+                                    id: 2,
+                                    workedYears: 5,
+                                    description: 'ООО "Рексофт"'
+                                }]} />
+                            </div>
                         </div>
                     </div>
                 </div>

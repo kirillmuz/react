@@ -10,4 +10,5 @@ export interface DropDownProps {
     selectedChanged?: (value: string) => void;
     label?: string;
     lblWeight?: LabelWeight;
+    className?: string;
 }
