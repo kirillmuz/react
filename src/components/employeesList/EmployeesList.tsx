@@ -1,8 +1,8 @@
 import { FC, useState } from 'react';
 import { EmployeesListProps } from './EmployeesListProps';
+import { PencilIcon, TrashIcon } from '../../assets/icons';
 import './employeesListStyles.scss'
 import clsx from 'classnames';
-import { PencilIcon, TrashIcon } from '../../assets/icons';
 
 export const EmployeesList: FC<EmployeesListProps> = props => {
     const { 
@@ -11,10 +11,10 @@ export const EmployeesList: FC<EmployeesListProps> = props => {
         onItemDelete,
         onItemEdit
     } = props;
-    const [selectedUser, setSelectedUser] = useState(0);
+    const [selectedEmployee, setSelectedEmployee] = useState(0);
 
     const employeeClickHandler = (id: number) => {
-        setSelectedUser(id);
+        setSelectedEmployee(id);
         onItemClick && onItemClick(id);
     }
 
@@ -26,22 +26,22 @@ export const EmployeesList: FC<EmployeesListProps> = props => {
         onItemDelete && onItemDelete(id);
     }
 
-    const isSelected = (id: number) => selectedUser === id;
+    const isSelected = (id: number) => selectedEmployee === id;
 
     return (
         <div className="empl-list">
-            {employeesList.map(user => {
+            {employeesList.map(employee => {
                 return (
-                    <div key={user.id} 
-                        className={clsx('empl-list__item', {'empl-list__item_selected': isSelected(user.id)})}
-                        onClick={() => employeeClickHandler(user.id)}
+                    <div key={employee.id} 
+                        className={clsx('empl-list__item', {'empl-list__item_selected': isSelected(employee.id)})}
+                        onClick={() => employeeClickHandler(employee.id)}
                     >
                         <div className="empl-list__item-fio">
-                            {`${user.lastName} ${user.firstName} ${user.midleName ?? ''}`.trim()}
+                            {`${employee.lastName} ${employee.firstName} ${employee.midleName ?? ''}`.trim()}
                         </div>
                         <div className="empl-list__item_actions">
-                            <PencilIcon width={18} height={18} onClick={() => {employeeEditHandler(user.id)}} />
-                            <TrashIcon width={18} height={18} onClick={() => {employeeDeleteHandler(user.id)}} />
+                            <PencilIcon width={18} height={18} onClick={() => {employeeEditHandler(employee.id)}} />
+                            <TrashIcon width={18} height={18} onClick={() => {employeeDeleteHandler(employee.id)}} />
                         </div>
                     </div>
                 );

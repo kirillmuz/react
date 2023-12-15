@@ -35,3 +35,10 @@ export interface UserFile {
     systemName: string;
     displayName: string;
 }
+
+export interface User {
+    id: number;
+    login: string;
+    password: string;
+    role: 'admin' | 'manager' | 'user';
+}
