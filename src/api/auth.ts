@@ -1,5 +1,7 @@
 import { AxiosInstance } from './axiosInstance';
 
+const {axiosPost} = AxiosInstance();
+
 interface LoginRequestDto {
     login: string;
     password: string;
@@ -11,10 +13,18 @@ interface LoginResponseDto {
     role: string;
 }
 
-const signIn = (loginData: LoginRequestDto) => {
-    return AxiosInstance.post<LoginResponseDto>('/login', loginData);
+interface RegistrationRequestDto {
+    login: string;
+    password: string;
 }
 
+const signIn = async(loginData: LoginRequestDto) => 
+    await axiosPost('/login', loginData) as LoginResponseDto;
+
+const signUp = async(registrationData: RegistrationRequestDto) => 
+    await axiosPost('/register', registrationData) as void;
+
 export const Auth = {
-    signIn
+    signIn,
+    signUp
 }
