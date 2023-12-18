@@ -6,8 +6,8 @@ import { RegistrationPage } from './pages/registration';
 import { RoutesPaths } from './constants/commonConstants';
 import { DepartmentsPage } from './pages/department';
 import { AdministrationPage } from './pages/administration';
-import './styles/globalStyles.scss'
 import { NoPermissionsPage } from './pages/noPermissions';
+import './styles/globalStyles.scss';
 
 export const App: React.FC = () => {
   return (
