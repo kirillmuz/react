@@ -4,7 +4,7 @@ import { Button } from '../../components';
 import { WidgetLayout } from '../../components/layouts';
 import { useNavigate } from 'react-router-dom';
 import { RoutesPaths } from '../../constants/commonConstants';
-import { Auth } from '../../api';
+import { AuthApi } from '../../api';
 import { AxiosError } from 'axios';
 import './registrationPageStyles.scss';
 
@@ -20,7 +20,7 @@ export const RegistrationPage: FC = () => {
     const [formFields, setFormFields] = useState<RegistrationForm>();
     const [errorMessage, setErrorMessage] = useState<string>();
     const navigate = useNavigate();
-    const { signUp } = Auth;
+    const { signUp, signIn } = AuthApi;
 
     const changeFieldValue = (value: string | undefined, fieldName: FormFieldsNames) => {
         setFormFields(prev => {
@@ -41,11 +41,20 @@ export const RegistrationPage: FC = () => {
             return;
         }
 
-        signUp({
-            login: formFields.login, 
+        const data = {login: formFields.login, 
             password: formFields.password
-        }).then(() => {
-            navigate(`/${RoutesPaths.Departments}`);
+        };
+
+        signUp(data).then(() => {
+            signIn(data).then(respData => {
+                if(respData.role === 'user') {
+                    navigate(`/${RoutesPaths.NoPermissions}`);
+                } else {
+                    navigate(`/${RoutesPaths.Departments}`);
+                }
+            }).catch(err => 
+                setErrorMessage((err as AxiosError)?.message)
+            );
         }).catch((err) => {
             setErrorMessage((err as AxiosError)?.message)
         });

@@ -2,16 +2,16 @@ import { FC, useState } from 'react';
 import { TextField } from '../../components';
 import { Button } from '../../components';
 import { WidgetLayout } from '../../components/layouts';
-import './loginPageStyles.scss';
 import { useNavigate } from 'react-router-dom';
 import { RoutesPaths } from '../../constants/commonConstants';
-import { Auth } from '../../api';
+import { AuthApi } from '../../api';
+import './loginPageStyles.scss';
 
 export const LoginPage: FC = () => {
     const [login, setLogin] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const navigate = useNavigate();
-    const { signIn } = Auth;
+    const { signIn } = AuthApi;
 
 
     const loginChangedHandler = (value: string) => {
@@ -23,21 +23,17 @@ export const LoginPage: FC = () => {
     };
 
     const loginHandler = () => {
-        /*console.log({
-            login,
-            password
-        });
-        // TODO: Доделать, когда будет API
-        navigate(RoutesPaths.Departments);*/
-
         signIn({login, password})
-            .then((resp) => {
-                console.log(resp);
+            .then((respData) => {
+                if(respData.role === 'user') {
+                    navigate(`/${RoutesPaths.NoPermissions}`);
+                } else {
+                    navigate(`/${RoutesPaths.Departments}`);
+                }
             })
             .catch((err) => {
                 console.log(err);
             });
-        
     }
 
     const toRegistrationHandler = () => {
