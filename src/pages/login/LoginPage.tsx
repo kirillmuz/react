@@ -1,18 +1,30 @@
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { TextField } from '../../components';
 import { Button } from '../../components';
 import { WidgetLayout } from '../../components/layouts';
 import { useNavigate } from 'react-router-dom';
 import { RoutesPaths } from '../../constants/commonConstants';
-import { AuthApi } from '../../api';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxToolkitHooks';
+import { signIn } from '../../services';
 import './loginPageStyles.scss';
 
 export const LoginPage: FC = () => {
+    const { accessToken, role } = useAppSelector((state) => state.user);
+    const dispatch = useAppDispatch();
+
     const [login, setLogin] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const navigate = useNavigate();
-    const { signIn } = AuthApi;
 
+    useEffect(() => {
+        if(accessToken) {
+            if(role === 'user' || !role) {
+                navigate(`/${RoutesPaths.NoPermissions}`);
+            } else {
+                navigate(`/${RoutesPaths.Departments}`);
+            }
+        }
+    }, [accessToken, role, navigate]);
 
     const loginChangedHandler = (value: string) => {
         setLogin(value);
@@ -23,17 +35,7 @@ export const LoginPage: FC = () => {
     };
 
     const loginHandler = () => {
-        signIn({login, password})
-            .then((respData) => {
-                if(respData.role === 'user') {
-                    navigate(`/${RoutesPaths.NoPermissions}`);
-                } else {
-                    navigate(`/${RoutesPaths.Departments}`);
-                }
-            })
-            .catch((err) => {
-                console.log(err);
-            });
+        dispatch(signIn({login, password}));
     }
 
     const toRegistrationHandler = () => {

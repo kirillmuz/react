@@ -8,8 +8,13 @@ import { PencilIcon, PlusIcon, TrashIcon, UploadIcon } from '../../assets/icons'
 import { format } from 'date-fns';
 import { DepartmentsApi } from '../../api';
 import './departmentsPageStyles.scss';
+import { useAppSelector } from '../../hooks/reduxToolkitHooks';
+import { useNavigate } from 'react-router-dom';
+import { RoutesPaths } from '../../constants/commonConstants';
 
 export const DepartmentsPage: FC = () => {
+    const { role, accessToken } = useAppSelector((state) => state.user);
+
     const { getDepartments, deleteDepartment } = DepartmentsApi;
 
     const [departmentsData, setDepartmentsData] = useState<Array<Department>>([]);
@@ -26,6 +31,18 @@ export const DepartmentsPage: FC = () => {
     const [birthDate, setBirthDate] = useState('');
     const [email, setEmail] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if(accessToken) {
+            if(role === 'user' || !role) {
+                navigate(`${RoutesPaths.NoPermissions}`);
+            }
+        } else {
+            navigate(`${RoutesPaths.Login}`);
+        }
+    }, [accessToken, role, navigate]);
 
     useEffect(() => {
         getDepartments()
@@ -167,9 +184,12 @@ export const DepartmentsPage: FC = () => {
                             label="Отделы:" 
                             selectedChanged={(val) => depatmentChangedHandler(val)}
                         />
-                        <PlusIcon width={16} height={16} className="dep-page__add-btn" />
-                        <PencilIcon />
-                        <TrashIcon onClick={deleteDepartmentHandler}/>
+                        {role === 'admin' && (<>
+                            <PlusIcon width={16} height={16} className="dep-page__add-btn" />
+                            <PencilIcon />
+                            <TrashIcon onClick={deleteDepartmentHandler}/>
+                            </>
+                        )}
                     </div>
                     <EmployeesList employeesList={employeesData}
                         onItemClick={(id) => onEmployeeSelectedHandler(id)}
