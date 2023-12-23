@@ -1,4 +1,4 @@
-import { AnyAction, PayloadAction, createSlice } from '@reduxjs/toolkit';
+import { UnknownAction , PayloadAction, createSlice } from '@reduxjs/toolkit';
 import { signIn, signUp } from '../../services';
 import { AccessTokenKey, RoleKey, UserNameKey } from '../../constants/commonConstants';
 
@@ -32,9 +32,9 @@ const initialState: UserState = {
     userName: getItemFromSessionStorage(UserNameKey)
 }
 
-const isLoading = (action: AnyAction) => action.type.endsWith('pending');
+const isLoading = (action: UnknownAction ) => action.type.endsWith('pending');
 
-const isError = (action: AnyAction) => action.type.endsWith('rejected');
+const isError = (action: UnknownAction ) => action.type.endsWith('rejected');
 
 const userSlice = createSlice({
     name: NAME,

@@ -21,6 +21,7 @@ export interface Employee {
     birthDate: string;
     educations: Array<Education>;
     workExperience: Array<WorkExperience>;
+    userFiles: Array<UserFile>;
 }
 
 export interface Department {

@@ -2,22 +2,21 @@
 import { FC, useEffect, useState } from 'react';
 import { Layout } from '../../components/layouts';
 import { Button, Dialog, DropDown, EducationList, EmployeesList, FilesList, TextField, WorkExperienceList } from '../../components';
-import { Department, Employee } from '../../types/models';
+import { Employee } from '../../types/models';
 import { DropDownItem } from '../../components/dropDown/DropDownProps';
 import { PencilIcon, PlusIcon, TrashIcon, UploadIcon } from '../../assets/icons';
 import { format } from 'date-fns';
-import { DepartmentsApi } from '../../api';
-import './departmentsPageStyles.scss';
-import { useAppSelector } from '../../hooks/reduxToolkitHooks';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxToolkitHooks';
 import { useNavigate } from 'react-router-dom';
 import { RoutesPaths } from '../../constants/commonConstants';
+import { addEmployee, deleteEmployee, editEmployee, getDepartments } from '../../services';
+import './departmentsPageStyles.scss';
 
 export const DepartmentsPage: FC = () => {
     const { role, accessToken } = useAppSelector((state) => state.user);
+    const { departments } = useAppSelector((state) => state.departments);
+    const dispatch = useAppDispatch();
 
-    const { getDepartments, deleteDepartment } = DepartmentsApi;
-
-    const [departmentsData, setDepartmentsData] = useState<Array<Department>>([]);
     const [employeesData, setEmployeesData] = useState<Array<Employee>>([]);
     const [selectedDepartmentId, setSelectedDepartmentId] = useState<number>();
     const [selectedEmployee, setSelectedEmployee] = useState<Employee>();
@@ -38,30 +37,29 @@ export const DepartmentsPage: FC = () => {
         if(accessToken) {
             if(role === 'user' || !role) {
                 navigate(`${RoutesPaths.NoPermissions}`);
+            } else {
+                dispatch(getDepartments());
             }
         } else {
             navigate(`${RoutesPaths.Login}`);
         }
-    }, [accessToken, role, navigate]);
+    }, [accessToken, role, navigate, dispatch]);
+
+    // useEffect(() => {
+    //     const selectedDepartment = selectedDepartmentId 
+    //         ? departments.find(d => d.id === selectedDepartmentId)
+    //         : departments[0];
+    //     setSelectedDepartmentId(selectedDepartment?.id);
+    // }, [departments, selectedDepartmentId]);
 
     useEffect(() => {
-        getDepartments()
-        .then(respData => {
-            setDepartmentsData(respData);
-            if(respData.length) {
-                setSelectedDepartmentId(respData[0].id);
-            }
-        }).catch(err => {
-            setDepartmentsData([]);
-            console.log(err);
-        });
-    }, [getDepartments]);
-
-    useEffect(() => {
-        const selectedDepartment = departmentsData.find(d => d.id === selectedDepartmentId);
+        const selectedDepartment = selectedDepartmentId 
+            ? departments.find(d => d.id === selectedDepartmentId)
+            : departments[0];
+        setSelectedDepartmentId(selectedDepartment?.id);
         setEmployeesData(selectedDepartment ? selectedDepartment.employees : []);
         setSelectedEmployee(undefined);
-    }, [departmentsData, selectedDepartmentId]);
+    }, [departments, selectedDepartmentId]);
 
     useEffect(() => {
         if(userActionMode === 'edit') {
@@ -100,22 +98,57 @@ export const DepartmentsPage: FC = () => {
         setShowEmployeeDialog(true);
     }
 
+    const deleteEmployeeHandler = (id: number) => {
+        setUserToEdit(id);
+        if(confirm('Вы действительно хотите удалить данного сотрудника?')) {
+            dispatch(deleteEmployee(id));
+        }
+    }
+
     const userDialogContentRenderer = () => {
         return (
             <>
                 <TextField labelText="Фамилия" value={lastName} onChange={(val) => setLastName(val)}/>
                 <TextField labelText="Имя" value={firstName} onChange={(val) => setFirstName(val)} />
                 <TextField labelText="Отчество" value={midleName} onChange={(val) => setMidleName(val)} />
-                <TextField labelText="Дата рождения" value={birthDate} onChange={(val) => setBirthDate(val)} />
+                {/* <TextField type="date" labelText="Дата рождения" value={birthDate} onChange={(val) => setBirthDate(val)} /> */}
                 <TextField labelText="Email" value={email} onChange={(val) => setEmail(val)} />
                 <TextField labelText="Телефон" value={phoneNumber} onChange={(val) => setPhoneNumber(val)} />
             </>
         );
     }
 
-    const closeEmployyeDialogHandler = () =>{
+    const closeEmployeeDialogHandler = () =>{
         setShowEmployeeDialog(false);
         clearEmployeeDialogFields();
+    }
+    
+    const saveEmployeeDialogHandler = () => {
+        if(!selectedDepartmentId) {
+            return;
+        }
+        const savingEmployee = {
+            departmentId: selectedDepartmentId,
+            birthDate: new Date().toUTCString(),
+            email,
+            firstName,
+            lastName,
+            phoneNumber,
+            midleName
+        };
+        if(userActionMode === 'create') {
+            dispatch(addEmployee(savingEmployee))
+        }
+        if(userActionMode === 'edit' && selectedEmployee) {
+            dispatch(editEmployee({
+                ...savingEmployee,
+                id: selectedEmployee.id,
+                educations: selectedEmployee.educations,
+                userFiles: selectedEmployee.userFiles,
+                workExperience: selectedEmployee.workExperience
+            }))
+        }
+        closeEmployeeDialogHandler();
     }
 
     const depatmentChangedHandler = (id?: string) => {
@@ -151,22 +184,14 @@ export const DepartmentsPage: FC = () => {
         if(!selectedDepartmentId) {
             return;
         }
-        deleteDepartment(selectedDepartmentId).then(() => {
-            setDepartmentsData(prev => {
-                const filtered = prev.filter(d => d.id !== selectedDepartmentId);
-                return [...filtered];
-            });
-        }).catch(err => {
-            console.log(err);
-        });
     }
 
     return (
         <Layout>
             <Dialog title={userActionMode !== 'edit' ? 'Добавить сотрудника' : 'Изменить  сотрудника'}
                 open={showEmployeeDialog} 
-                onSave={() => {}}
-                onCancel={closeEmployyeDialogHandler}
+                onSave={saveEmployeeDialogHandler}
+                onCancel={closeEmployeeDialogHandler}
             >
                 {userDialogContentRenderer()}
             </Dialog>
@@ -174,12 +199,12 @@ export const DepartmentsPage: FC = () => {
                 <div className="dep-page__users-list-container">
                     <div className="dep-page__departments-list">
                         <DropDown className="dep-page__departments-drop-down"
-                            items={departmentsData.map(dd => {
+                            items={departments?.map(dd => {
                                     return {
                                         text: dd.name,
                                         value: dd.id.toString()
                                     } as DropDownItem;
-                                })
+                                }) ?? []
                             } 
                             label="Отделы:" 
                             selectedChanged={(val) => depatmentChangedHandler(val)}
@@ -193,7 +218,7 @@ export const DepartmentsPage: FC = () => {
                     </div>
                     <EmployeesList employeesList={employeesData}
                         onItemClick={(id) => onEmployeeSelectedHandler(id)}
-                        onItemDelete={(id) => console.log('delete ', id)}
+                        onItemDelete={deleteEmployeeHandler}
                         onItemEdit={editEmployeeHandler}
                     />
                     <Button text="Добавить сотрудника" className="dep-page__add-user-btn" onClick={createEmployeeHandler} />
@@ -236,15 +261,7 @@ export const DepartmentsPage: FC = () => {
                             <FilesList 
                                 onFileDownload={downloadFileHandler}
                                 onFileDelete={deleteFileHandler}
-                                filesList={[{
-                                    id: 1,
-                                    displayName: 'my file.txt',
-                                    systemName: 'asadasd'
-                                }, {
-                                    id: 2,
-                                    displayName: 'my file 2.txt',
-                                    systemName: 'asadasd'
-                                }]} 
+                                filesList={selectedEmployee?.userFiles ?? []} 
                             />
                         </div>
                         <div className="dep-page__user-add-info-data">

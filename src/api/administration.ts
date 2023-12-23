@@ -9,7 +9,7 @@ const getUsers = async() =>
     await axiosGet('/Administration/getusers') as Array<User>;
 
 const setUserRole = async(setRoleData: SetRoleResponseDto) => 
-    await axiosPatch('/Administration/getusers', setRoleData) as void;
+    await axiosPatch('/Administration/setuserrole', setRoleData) as void;
 
 export const AdministrationApi = {
     getUsers,
