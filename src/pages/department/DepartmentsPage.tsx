@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-import { FC, useEffect, useState } from 'react';
+import { ChangeEventHandler, FC, useEffect, useRef, useState } from 'react';
 import { Layout } from '../../components/layouts';
 import { Button, Dialog, DropDown, EducationList, EmployeesList, FilesList, TextField, WorkExperienceList } from '../../components';
 import { Employee } from '../../types/models';
@@ -9,8 +9,9 @@ import { format } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxToolkitHooks';
 import { useNavigate } from 'react-router-dom';
 import { RoutesPaths } from '../../constants/commonConstants';
-import { addEmployee, deleteEmployee, editEmployee, getDepartments } from '../../services';
+import { addDepartment, addEducation, addEmployee, addWorkExperience, deleteDepartment, deleteEducation, deleteEmployee, deleteFile, deleteWorkExperience, editDepartment, editEmployee, getDepartments, uploadFile } from '../../services';
 import './departmentsPageStyles.scss';
+import { FilesApi } from '../../api';
 
 export const DepartmentsPage: FC = () => {
     const { role, accessToken } = useAppSelector((state) => state.user);
@@ -22,6 +23,8 @@ export const DepartmentsPage: FC = () => {
     const [selectedEmployee, setSelectedEmployee] = useState<Employee>();
     const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
     const [userActionMode, setUserActionMode] = useState<'create' | 'edit'>('create');
+    const [showDepartmentDialog, setShowDepartmentDialog] = useState(false);
+    const [departmentActionMode, setDepartmentActionMode] = useState<'create' | 'edit'>('create');
     const [userToEdit, setUserToEdit] = useState(0);
     
     const [lastName, setLastName] = useState('');
@@ -30,6 +33,18 @@ export const DepartmentsPage: FC = () => {
     const [birthDate, setBirthDate] = useState('');
     const [email, setEmail] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
+    
+    const [departmentName, setDepartmentName] = useState('');
+
+    const [showEducationDialog, setShowEducationDialog] = useState(false);
+    const [educationName, setEducationName] = useState('');
+    const [educationDescription, setEducationDescription] = useState('');
+
+    const [showWorkExpDialog, setShowWorkExpDialog] = useState(false);
+    const [workName, setWorkName] = useState('');
+    const [workExp, setWorkExp] = useState('');
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const navigate = useNavigate();
 
@@ -45,21 +60,23 @@ export const DepartmentsPage: FC = () => {
         }
     }, [accessToken, role, navigate, dispatch]);
 
-    // useEffect(() => {
-    //     const selectedDepartment = selectedDepartmentId 
-    //         ? departments.find(d => d.id === selectedDepartmentId)
-    //         : departments[0];
-    //     setSelectedDepartmentId(selectedDepartment?.id);
-    // }, [departments, selectedDepartmentId]);
-
     useEffect(() => {
         const selectedDepartment = selectedDepartmentId 
             ? departments.find(d => d.id === selectedDepartmentId)
             : departments[0];
         setSelectedDepartmentId(selectedDepartment?.id);
         setEmployeesData(selectedDepartment ? selectedDepartment.employees : []);
-        setSelectedEmployee(undefined);
-    }, [departments, selectedDepartmentId]);
+        if(selectedEmployee && selectedDepartment) {
+            const findedSelectedEmployee 
+                = selectedDepartment.employees
+                    .find(e => e.id === selectedEmployee.id);
+            setSelectedEmployee(findedSelectedEmployee);
+        } else if (selectedDepartment?.employees.length) {
+            setSelectedEmployee(selectedDepartment.employees[0]);
+        } else {
+            setSelectedEmployee(undefined);
+        }
+    }, [departments, selectedDepartmentId, selectedEmployee]);
 
     useEffect(() => {
         if(userActionMode === 'edit') {
@@ -105,19 +122,6 @@ export const DepartmentsPage: FC = () => {
         }
     }
 
-    const userDialogContentRenderer = () => {
-        return (
-            <>
-                <TextField labelText="Фамилия" value={lastName} onChange={(val) => setLastName(val)}/>
-                <TextField labelText="Имя" value={firstName} onChange={(val) => setFirstName(val)} />
-                <TextField labelText="Отчество" value={midleName} onChange={(val) => setMidleName(val)} />
-                {/* <TextField type="date" labelText="Дата рождения" value={birthDate} onChange={(val) => setBirthDate(val)} /> */}
-                <TextField labelText="Email" value={email} onChange={(val) => setEmail(val)} />
-                <TextField labelText="Телефон" value={phoneNumber} onChange={(val) => setPhoneNumber(val)} />
-            </>
-        );
-    }
-
     const closeEmployeeDialogHandler = () =>{
         setShowEmployeeDialog(false);
         clearEmployeeDialogFields();
@@ -125,6 +129,7 @@ export const DepartmentsPage: FC = () => {
     
     const saveEmployeeDialogHandler = () => {
         if(!selectedDepartmentId) {
+            closeEmployeeDialogHandler();
             return;
         }
         const savingEmployee = {
@@ -168,33 +173,164 @@ export const DepartmentsPage: FC = () => {
         return `${selectedEmployee.lastName} ${selectedEmployee.firstName} ${selectedEmployee.midleName ?? ''}`.trim();
     }
 
-    const uploadFileHandler = () => {
+    const fileToBase64 = (file: any, callback: (base64string: string) => void) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            if(reader?.result && typeof reader.result === 'string') {
+                const base64string = reader.result.split(',')[1];
+                callback(base64string);
+            } else {
+                callback('');
+            }
+        }
     }
 
-    const downloadFileHandler = (id: number) => {
+    const uploadFileHandler = () => {
+        fileInputRef.current?.click();
+    }
+
+    const fileSelectHandler = (e: any ) => {
+        const file = e.target.files[0];
+        if(file) {
+            fileToBase64(file, (base64String: string) => {
+                dispatch(uploadFile({
+                    employeeId: selectedEmployee!.id,
+                    fileName: file.name,
+                    fileString: base64String
+                }))
+            })
+        }
+    }
+
+    const downloadFileHandler = (displayName: string, systemName: string) => {
+        FilesApi().downloadFile({
+            displayName,
+            systemName
+        }).then(data => {
+            const blob = new Blob([data], {'type': 'application/octet-stream'});
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = displayName;
+            link.click();
+        });
     }
 
     const deleteFileHandler = (id: number) => {
+        if(confirm('Вы действительно хотите удалить данный файл?')) {
+            dispatch(deleteFile(id));
+        }
     }
 
-    const deleteDepartmentHandler = () => {
-        if(!confirm('Вы действительно хотите удалить данный отдел?')) {
+    const createDepartmentHandler = () => {
+        setDepartmentActionMode('create');
+        setShowDepartmentDialog(true);
+    }
+
+    const editDepartmentHandler = () => {
+        setDepartmentActionMode('edit');
+        setDepartmentName(departments.find(d=>d.id === selectedDepartmentId)?.name ?? '');
+        setShowDepartmentDialog(true);
+    }
+
+    const closeDepartmentDialogHandler = () => {
+        setShowDepartmentDialog(false);
+        setDepartmentName('');
+        setDepartmentActionMode('create');
+    }
+
+    const saveDepartmentHandler = () => {
+        if(departmentActionMode === 'create') {
+            dispatch(addDepartment({name: departmentName}))
+            closeDepartmentDialogHandler();
             return;
         }
         if(!selectedDepartmentId) {
+            closeDepartmentDialogHandler();
             return;
+        }
+        if(departmentActionMode === 'edit') {
+            dispatch(editDepartment({
+                id: selectedDepartmentId,
+                name: departmentName
+            }));
+        }
+        closeDepartmentDialogHandler();
+    }
+
+    const deleteDepartmentHandler = () => {
+        if(selectedDepartmentId && confirm('Вы действительно хотите удалить данный отдел?')) {
+            dispatch(deleteDepartment(selectedDepartmentId));
+            setSelectedDepartmentId(undefined);
         }
     }
 
     return (
         <Layout>
-            <Dialog title={userActionMode !== 'edit' ? 'Добавить сотрудника' : 'Изменить  сотрудника'}
+            {role === 'admin' && (
+                <Dialog title={departmentActionMode !== 'edit' ? 'Добавить отдел' : 'Изменить отдел'}
+                    open={showDepartmentDialog} 
+                    onSave={saveDepartmentHandler}
+                    onCancel={closeDepartmentDialogHandler}
+                >
+                    <TextField labelText="Наименование" value={departmentName} onChange={(val) => setDepartmentName(val)}/>
+                </Dialog>
+            )}
+            <Dialog title={userActionMode !== 'edit' ? 'Добавить сотрудника' : 'Изменить сотрудника'}
                 open={showEmployeeDialog} 
                 onSave={saveEmployeeDialogHandler}
                 onCancel={closeEmployeeDialogHandler}
             >
-                {userDialogContentRenderer()}
+                <TextField labelText="Фамилия" value={lastName} onChange={(val) => setLastName(val)}/>
+                <TextField labelText="Имя" value={firstName} onChange={(val) => setFirstName(val)} />
+                <TextField labelText="Отчество" value={midleName} onChange={(val) => setMidleName(val)} />
+                {/* <TextField type="date" labelText="Дата рождения" value={birthDate} onChange={(val) => setBirthDate(val)} /> */}
+                <TextField labelText="Email" value={email} onChange={(val) => setEmail(val)} />
+                <TextField labelText="Телефон" value={phoneNumber} onChange={(val) => setPhoneNumber(val)} />
             </Dialog>
+            <Dialog title="Данные об образовании"
+                open={showEducationDialog} 
+                onSave={() => {
+                    dispatch(addEducation({
+                        employeeId: selectedEmployee!.id,
+                        title: educationName,
+                        description: educationDescription
+                    }));
+                    setShowEducationDialog(false);
+                    setEducationName('');
+                    setEducationDescription('');
+                }}
+                onCancel={() => {
+                    setShowEducationDialog(false);
+                    setEducationName('');
+                    setEducationDescription('');
+                }}
+            >
+                <TextField labelText="Наименование" value={educationName} onChange={(val) => setEducationName(val)}/>
+                <TextField labelText="Описание" value={educationDescription} onChange={(val) => setEducationDescription(val)}/>
+            </Dialog>
+            <Dialog title="Данные о рабочем опыте"
+                open={showWorkExpDialog} 
+                onSave={() => {
+                    dispatch(addWorkExperience({
+                        employeeId: selectedEmployee!.id,
+                        workedYears: +workExp,
+                        description: workName
+                    }));
+                    setShowWorkExpDialog(false);
+                    setWorkName('');
+                    setWorkExp('');
+                }}
+                onCancel={() => {
+                    setShowWorkExpDialog(false);
+                    setWorkName('');
+                    setWorkExp('');
+                }}
+            >
+                <TextField labelText="Место" value={workName} onChange={(val) => setWorkName(val)}/>
+                <TextField type="number" labelText="Стаж" value={workExp} onChange={(val) => setWorkExp(val)}/>
+            </Dialog>
+            <input type="file" onChange={fileSelectHandler} style={{display: 'none'}} ref={fileInputRef} />
             <div className="dep-page">
                 <div className="dep-page__users-list-container">
                     <div className="dep-page__departments-list">
@@ -210,8 +346,8 @@ export const DepartmentsPage: FC = () => {
                             selectedChanged={(val) => depatmentChangedHandler(val)}
                         />
                         {role === 'admin' && (<>
-                            <PlusIcon width={16} height={16} className="dep-page__add-btn" />
-                            <PencilIcon />
+                            <PlusIcon width={16} height={16} className="dep-page__add-btn" onClick={createDepartmentHandler} />
+                            <PencilIcon onClick={editDepartmentHandler} />
                             <TrashIcon onClick={deleteDepartmentHandler}/>
                             </>
                         )}
@@ -250,7 +386,7 @@ export const DepartmentsPage: FC = () => {
                             </div>
                         </div>
                         <div className="dep-page__user-info-actions">
-                            <UploadIcon onClick={uploadFileHandler} color="#7a7a7a" />
+                            {selectedEmployee && (<UploadIcon onClick={uploadFileHandler} color="#7a7a7a" />)}
                         </div>
                     </div>
                     <div className="dep-page__user-add-info">
@@ -270,18 +406,30 @@ export const DepartmentsPage: FC = () => {
                                     <span className="dep-page__label">
                                         Данные об образовании:
                                     </span>
-                                    <PlusIcon width={16} height={16} className="dep-page__add-btn" />
+                                    {!!selectedEmployee && (
+                                        <PlusIcon width={16} height={16} className="dep-page__add-btn" onClick={() => setShowEducationDialog(true)} />
+                                    )}
                                 </div>
-                                <EducationList educationList={selectedEmployee?.educations ?? []} />
+                                <EducationList educationList={selectedEmployee?.educations ?? []} onDelete={(id) => {
+                                    if(confirm('Вы действительно хотите удалить данную запись об образовании?')) {
+                                        dispatch(deleteEducation(id));
+                                    }
+                                }} />
                             </div>
                             <div className="dep-page__user-add-info-data__cell">
                                 <div className="dep-page__list-title">
                                     <span className="dep-page__label">
                                         Данные о работе:
                                     </span>
-                                    <PlusIcon width={16} height={16} className="dep-page__add-btn" />
+                                    {!!selectedEmployee && (
+                                        <PlusIcon width={16} height={16} className="dep-page__add-btn" onClick={() => setShowWorkExpDialog(true)} />
+                                    )}
                                 </div>
-                                <WorkExperienceList workExperienceList={selectedEmployee?.workExperience ?? []} />
+                                <WorkExperienceList workExperienceList={selectedEmployee?.workExperience ?? []} onDelete={(id) => {
+                                    if(confirm('Вы действительно хотите удалить данную запись о рабочем опыте?')) {
+                                        dispatch(deleteWorkExperience(id));
+                                    }
+                                }} />
                             </div>
                         </div>
                     </div>

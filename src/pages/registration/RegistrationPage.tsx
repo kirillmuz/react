@@ -20,7 +20,7 @@ export const RegistrationPage: FC = () => {
     const [formFields, setFormFields] = useState<RegistrationForm>();
     const [errorMessage, setErrorMessage] = useState<string>();
     const navigate = useNavigate();
-    const { signUp, signIn } = AuthApi;
+    const { signUp, signIn } = AuthApi();
 
     const changeFieldValue = (value: string | undefined, fieldName: FormFieldsNames) => {
         setFormFields(prev => {

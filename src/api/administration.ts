@@ -3,15 +3,20 @@ import { SetRoleResponseDto } from '../types/apiTypes';
 import { User } from '../types/models';
 import { AxiosInstance } from './axiosInstance';
 
-const { axiosGet, axiosPatch} = AxiosInstance(sessionStorage.getItem(AccessTokenKey) ?? '');
+export const AdministrationApi = () => {
+    const token = sessionStorage.getItem(AccessTokenKey) ?? '';
 
-const getUsers = async() =>
-    await axiosGet('/Administration/getusers') as Array<User>;
+    const { axiosGet, axiosPatch} = AxiosInstance(token);
 
-const setUserRole = async(setRoleData: SetRoleResponseDto) => 
-    await axiosPatch('/Administration/setuserrole', setRoleData) as void;
+    const getUsers = async() =>
+        await axiosGet('/Administration/getusers') as Array<User>;
 
-export const AdministrationApi = {
-    getUsers,
-    setUserRole
+    const setUserRole = async(setRoleData: SetRoleResponseDto) => 
+        await axiosPatch('/Administration/setuserrole', setRoleData) as void;
+
+
+    return { 
+        getUsers,
+        setUserRole
+    }
 }

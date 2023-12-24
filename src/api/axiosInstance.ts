@@ -15,8 +15,17 @@ export const AxiosInstance = (accessToken: string = '') => {
         return response.data;
     }
 
+    const axiosBlob = async(url: string = '', data: object = {} ) => {
+        const response = await axiosInstance.post(url, data, {
+            responseType: 'blob'
+        });
+        return response.data;
+    }
+
     const axiosPost = async(url: string = '', data: object = {}) => {
-        const response = await axiosInstance.post(url, data);
+        const response = await axiosInstance.post(url, data, {
+            headers: {}
+        });
         return response.data;
     }
 
@@ -40,6 +49,7 @@ export const AxiosInstance = (accessToken: string = '') => {
         axiosPost,
         axiosPut,
         axiosPatch,
-        axiosDelete
+        axiosDelete,
+        axiosBlob
     }
 }

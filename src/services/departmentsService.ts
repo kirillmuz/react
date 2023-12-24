@@ -18,7 +18,7 @@ export const getDepartments = createAsyncThunk<Array<Department>, undefined, Asy
     `${NAMESPACE}/getDepartments`,
     async(_, { rejectWithValue }) => {
         try {
-            return await DepartmentsApi.getDepartments();
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -29,8 +29,8 @@ export const addDepartment = createAsyncThunk<Array<Department>, AddDepartmentRe
     `${NAMESPACE}/addDepartment`,
     async(addDepartmentData, { rejectWithValue }) => {
         try {
-            await DepartmentsApi.addDepartment(addDepartmentData);
-            return await DepartmentsApi.getDepartments();
+            await DepartmentsApi().addDepartment(addDepartmentData);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -41,8 +41,8 @@ export const editDepartment = createAsyncThunk<Array<Department>, EditDepartment
     `${NAMESPACE}/editDepartment`,
     async(editDepartmentData, { rejectWithValue }) => {
         try {
-            await DepartmentsApi.editDepartment(editDepartmentData);
-            return await DepartmentsApi.getDepartments();
+            await DepartmentsApi().editDepartment(editDepartmentData);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -53,8 +53,8 @@ export const deleteDepartment = createAsyncThunk<Array<Department>, string | num
     `${NAMESPACE}/deleteDepartment`,
     async(id, { rejectWithValue }) => {
         try {
-            await DepartmentsApi.deleteDepartment(id);
-            return await DepartmentsApi.getDepartments();
+            await DepartmentsApi().deleteDepartment(id);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -65,8 +65,8 @@ export const addEmployee = createAsyncThunk<Array<Department>, AddEmployeeRespon
     `${NAMESPACE}/addEmployee`,
     async(addEmployeeData, { rejectWithValue }) => {
         try {
-            await EmployeeApi.addEmployee(addEmployeeData);
-            return await DepartmentsApi.getDepartments();
+            await EmployeeApi().addEmployee(addEmployeeData);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -77,8 +77,8 @@ export const editEmployee = createAsyncThunk<Array<Department>, UpdateEmployeeRe
     `${NAMESPACE}/editEmployee`,
     async(editEmployeeData, { rejectWithValue }) => {
         try {
-            await EmployeeApi.editEmployee(editEmployeeData);
-            return await DepartmentsApi.getDepartments();
+            await EmployeeApi().editEmployee(editEmployeeData);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -89,8 +89,8 @@ export const deleteEmployee = createAsyncThunk<Array<Department>, string | numbe
     `${NAMESPACE}/deleteEmployee`,
     async(id, { rejectWithValue }) => {
         try {
-            await EmployeeApi.deleteEmployee(id);
-            return await DepartmentsApi.getDepartments();
+            await EmployeeApi().deleteEmployee(id);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -101,8 +101,8 @@ export const addEducation = createAsyncThunk<Array<Department>, AddEducationResp
     `${NAMESPACE}/addEducation`,
     async(addEducationData, { rejectWithValue }) => {
         try {
-            await EmployeeApi.addEducation(addEducationData);
-            return await DepartmentsApi.getDepartments();
+            await EmployeeApi().addEducation(addEducationData);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -113,8 +113,8 @@ export const deleteEducation = createAsyncThunk<Array<Department>, string | numb
     `${NAMESPACE}/deleteEducation`,
     async(id, { rejectWithValue }) => {
         try {
-            await EmployeeApi.deleteEducation(id);
-            return await DepartmentsApi.getDepartments();
+            await EmployeeApi().deleteEducation(id);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -125,8 +125,8 @@ export const addWorkExperience = createAsyncThunk<Array<Department>, AddWorkExpe
     `${NAMESPACE}/addWorkExperience`,
     async(addWEData, { rejectWithValue }) => {
         try {
-            await EmployeeApi.addWorkExperience(addWEData);
-            return await DepartmentsApi.getDepartments();
+            await EmployeeApi().addWorkExperience(addWEData);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -137,8 +137,8 @@ export const deleteWorkExperience = createAsyncThunk<Array<Department>, string |
     `${NAMESPACE}/deleteWorkExperience`,
     async(id, { rejectWithValue }) => {
         try {
-            await EmployeeApi.deleteWorkExperience(id);
-            return await DepartmentsApi.getDepartments();
+            await EmployeeApi().deleteWorkExperience(id);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -149,8 +149,8 @@ export const uploadFile = createAsyncThunk<Array<Department>, UploadFileResponse
     `${NAMESPACE}/uploadFile`,
     async(uploadFileData, { rejectWithValue }) => {
         try {
-            await FilesApi.uploadFile(uploadFileData);
-            return await DepartmentsApi.getDepartments();
+            await FilesApi().uploadFile(uploadFileData);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
@@ -161,8 +161,8 @@ export const deleteFile = createAsyncThunk<Array<Department>, string | number, A
     `${NAMESPACE}/deleteFile`,
     async(id, { rejectWithValue }) => {
         try {
-            await FilesApi.deleteFile(id);
-            return await DepartmentsApi.getDepartments();
+            await FilesApi().deleteFile(id);
+            return await DepartmentsApi().getDepartments();
         } catch(error) {
             return rejectWithValue((error as Error).message);
         }
